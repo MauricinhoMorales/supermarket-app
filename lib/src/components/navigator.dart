@@ -1,6 +1,8 @@
+import 'package:app/src/pages/shopping.dart';
+import 'package:app/src/pages/user.dart';
 import 'package:flutter/material.dart';
 
-import '../pages/home_page.dart';
+import '../pages/registry.dart';
 
 class Navigation extends StatelessWidget {
   const Navigation({super.key});
@@ -13,9 +15,9 @@ class Navigation extends StatelessWidget {
       child: Scaffold(
         body: TabBarView(
           children: [
-            HomePage(title: 'Page 1'),
-            HomePage(title: 'Page 2'),
-            HomePage(title: 'Page 3'),
+            ShoppingPage(),
+            RegistryPage(),
+            UserPage(),
           ],
         ),
         bottomNavigationBar: BottomAppBar(
