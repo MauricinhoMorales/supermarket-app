@@ -1,4 +1,5 @@
 
+import 'package:app/src/components/item_card.dart';
 import 'package:flutter/material.dart';
 
 class ShoppingPage extends StatelessWidget {
@@ -17,7 +18,7 @@ class ShoppingPage extends StatelessWidget {
           bottom: const TabBar(
             tabs: <Widget>[
               Tab(
-                icon: Icon(Icons.list),
+                icon: Icon(Icons.shopping_cart),
               ),
               Tab(
                 icon: Icon(Icons.add_business),
@@ -28,10 +29,10 @@ class ShoppingPage extends StatelessWidget {
         body: const TabBarView(
           children: <Widget>[
             Center(
-              child: Text("It's cloudy here"),
+              child: ItemCard(),
             ),
             Center(
-              child: Text("It's rainy here"),
+              child: Text("Available Items"),
             ),
           ],
         ),
