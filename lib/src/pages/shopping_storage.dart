@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:app/src/components/item_card.dart'; // Adjust the import path as necessary
 
-class ShoppingCart extends StatefulWidget {
-  const ShoppingCart({super.key});
+class ShoppingStorage extends StatefulWidget {
+  const ShoppingStorage({super.key});
 
   @override
-  _ShoppingCartState createState() => _ShoppingCartState();
+  _ShoppingStorageState createState() => _ShoppingStorageState();
 }
 
-class _ShoppingCartState extends State<ShoppingCart> {
+class _ShoppingStorageState extends State<ShoppingStorage> {
   List<Map<String, String>> allItems = [
     {'name': 'Apples', 'quantity': '0', 'price': '0'},
     {'name': 'Bananas', 'quantity': '0', 'price': '0'},

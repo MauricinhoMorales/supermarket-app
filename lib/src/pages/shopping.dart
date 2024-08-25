@@ -1,5 +1,6 @@
 
-import 'package:app/src/components/item_card.dart';
+import 'package:app/src/pages/shopping_cart.dart';
+import 'package:app/src/pages/shopping_storage.dart';
 import 'package:flutter/material.dart';
 
 class ShoppingPage extends StatelessWidget {
@@ -29,10 +30,10 @@ class ShoppingPage extends StatelessWidget {
         body: const TabBarView(
           children: <Widget>[
             Center(
-              child: ItemCard(),
+              child: ShoppingCart(),
             ),
             Center(
-              child: Text("Available Items"),
+              child: ShoppingStorage(),
             ),
           ],
         ),
