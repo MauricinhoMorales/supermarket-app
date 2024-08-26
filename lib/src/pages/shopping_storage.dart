@@ -67,8 +67,12 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
     }
   }
 
-  void _addToCart(int id) async {
-    await _databaseHelper.addToCart(id); // Delete from database
+  void _changeState(int id, String state) async {
+    if (state == 'cart'){
+      await _databaseHelper.removeFromCart(id);
+    } else {
+      await _databaseHelper.addToCart(id);
+    }
     await _loadItems();
   }
 
@@ -193,7 +197,7 @@ Future<bool> _showDeleteConfirmationDialog(int id, String itemName) async {
                   },  
                   context: ItemCardContext.storage, 
                   onChangeState: () {  
-                    _addToCart(filteredItems[index]['id']);
+                    _changeState(filteredItems[index]['id'], filteredItems[index]['state']);
                   }, 
                 ); // Display the ItemCard for each filtered item
               },
