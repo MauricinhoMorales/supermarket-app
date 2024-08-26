@@ -1,3 +1,5 @@
+import 'package:app/src/utilities/context.dart';
+import 'package:app/src/utilities/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:app/src/components/item_card.dart'; // Adjust the import path as necessary
 
@@ -9,44 +11,47 @@ class ShoppingCart extends StatefulWidget {
 }
 
 class _ShoppingCartState extends State<ShoppingCart> {
-  List<Map<String, String>> allItems = [
-    {'name': 'Apples', 'quantity': '0', 'price': '0'},
-    {'name': 'Bananas', 'quantity': '0', 'price': '0'},
-    {'name': 'Cherries', 'quantity': '0', 'price': '0'},
-    {'name': 'Dates', 'quantity': '0', 'price': '0'},
-    {'name': 'Elderberries', 'quantity': '0', 'price': '0'},
-    {'name': 'Apples', 'quantity': '0', 'price': '0'},
-    {'name': 'Bananas', 'quantity': '0', 'price': '0'},
-    {'name': 'Cherries', 'quantity': '0', 'price': '0'},
-    {'name': 'Dates', 'quantity': '0', 'price': '0'},
-    {'name': 'Elderberries', 'quantity': '0', 'price': '0'},
-  ]; // Full list of items
-  List<Map<String, String>> filteredItems = []; // Filtered list based on search input
-
+  List<Map<String, dynamic>> allItems = [];
+  List<Map<String, dynamic>> filteredItems = [];
   final TextEditingController _searchController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    filteredItems = allItems; // Initially, all items are displayed
+    _loadItems(); // Load items from the database
+  }
+
+  Future<void> _loadItems() async {
+    final items = await _databaseHelper.getCartItems();
+    print('Loaded items from DB CART: $items');
+    setState(() {
+      allItems = items;
+      filteredItems = items;
+    });
   }
 
   void _filterItems(String query) {
     setState(() {
       filteredItems = allItems
-          .where((item) => item['name']!.toLowerCase().contains(query.toLowerCase()))
+          .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
-  void _updateItem(int index, String name, String quantity, String price) {
-    setState(() {
-      allItems[index] = {'name': name, 'quantity': quantity, 'price': price}; // Update item in the source list
-      filteredItems = allItems // Update filtered list to reflect changes
-          .where((item) => item['name']!.toLowerCase().contains(_searchController.text.toLowerCase()))
-          .toList();
-    });
+  Future<void> _updateItem(int index, String name, String quantity, String price) async {
+    final id = filteredItems[index]['id'];
+    final updatedItem = {'name': name, 'quantity': quantity, 'price': price};
+
+    await _databaseHelper.updateItem(id, updatedItem);
+    await _loadItems(); // Reload items to refresh UI
   }
+
+  void _removeFromCart(int id) async {
+    await _databaseHelper.removeFromCart(id); // Delete from database
+    await _loadItems();
+  }
+
 
   double _calculateTotal() {
     double total = 0.0;
@@ -87,11 +92,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
               itemBuilder: (context, index) {
                 return ItemCard(
                   key: ValueKey(filteredItems[index]['name']), // Unique key for each card
-                  itemName: filteredItems[index]['name']!,
-                  quantity: filteredItems[index]['quantity']!,
-                  price: filteredItems[index]['price']!,
+                  itemName: filteredItems[index]['name'],
+                  quantity: filteredItems[index]['quantity'],
+                  price: filteredItems[index]['price'],
+                  state: filteredItems[index]['state'], 
                   onItemChanged: (name, quantity, price) {
                     _updateItem(index, name, quantity, price);
+                  },
+                    onDeleteItem: () {
+                  }, 
+                  context: ItemCardContext.cart, 
+                  onChangeState: () {  
+                    _removeFromCart(filteredItems[index]['id']);
                   },
                 ); // Display the ItemCard for each filtered item
               },
@@ -108,16 +120,4 @@ class _ShoppingCartState extends State<ShoppingCart> {
       ),
     );
   }
-}
-
-class ItemCardData {
-  final String itemName;
-  final String quantity;
-  final String price;
-
-  ItemCardData({
-    required this.itemName,
-    required this.quantity,
-    required this.price,
-  });
 }
