@@ -11,6 +11,8 @@ class ShoppingCart extends StatefulWidget {
 }
 
 class _ShoppingCartState extends State<ShoppingCart> {
+  final TextEditingController _changeController = TextEditingController();
+  bool _showFirstRow = true; // State variable to toggle rows
   List<Map<String, dynamic>> allItems = [];
   List<Map<String, dynamic>> filteredItems = [];
   final TextEditingController _searchController = TextEditingController();
@@ -26,8 +28,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
     final items = await _databaseHelper.getCartItems();
     print('Loaded items from DB CART: $items');
     setState(() {
-      allItems = items;
-      filteredItems = items;
+      allItems = List<Map<String, dynamic>>.from(items);  // Ensure mutability
+      filteredItems = List<Map<String, dynamic>>.from(items)..sort((a, b) => a['checked'].compareTo(b['checked']));  // Ensure mutability
     });
   }
 
@@ -36,6 +38,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       filteredItems = allItems
           .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
           .toList();
+      filteredItems.sort((a, b) => a['checked'].compareTo(b['checked']));
     });
   }
 
@@ -52,8 +55,17 @@ class _ShoppingCartState extends State<ShoppingCart> {
     await _loadItems();
   }
 
+  void _changeCheck(int id, int check) async {
+    if (check == 1){
+      await _databaseHelper.uncheckItem(id);
+    } else {
+      await _databaseHelper.checkItem(id);
+    }
+    await _loadItems();
+  }
 
-  double _calculateTotal() {
+
+  double _calculateExpectedTotal() {
     double total = 0.0;
     for (final item in allItems) {
       final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
@@ -61,6 +73,24 @@ class _ShoppingCartState extends State<ShoppingCart> {
       total += quantity * price;
     }
     return total;
+  }
+
+  double _calculateTotal() {
+    double total = 0.0;
+    for (final item in allItems) {
+      // Check if the item is checked
+      if (item['checked'] == 1) {
+        final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
+        final price = double.tryParse(item['price'] ?? '') ?? 0;
+        total += quantity * price;
+      }
+    }
+    return total;
+  }
+
+  double _calculateMultiplierValue(double total) {
+    final multiplier = double.tryParse(_changeController.text) ?? 0;
+    return total * multiplier;
   }
 
   @override
@@ -96,25 +126,88 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   quantity: filteredItems[index]['quantity'],
                   price: filteredItems[index]['price'],
                   state: filteredItems[index]['state'], 
+                  checked: filteredItems[index]['checked'] == 1 ? true: false,
+                  context: ItemCardContext.cart, 
                   onItemChanged: (name, quantity, price) {
                     _updateItem(index, name, quantity, price);
                   },
                     onDeleteItem: () {
                   }, 
-                  context: ItemCardContext.cart, 
                   onChangeState: () {  
                     _removeFromCart(filteredItems[index]['id']);
+                  }, 
+                  onCheckItem: () {  
+                    _changeCheck(filteredItems[index]['id'], filteredItems[index]['checked'] );
                   },
                 ); // Display the ItemCard for each filtered item
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Total Value: \$${_calculateTotal().toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Button to toggle rows
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showFirstRow = !_showFirstRow; // Toggle the boolean state
+                    });
+                  },
+                  child: const Icon(Icons.currency_exchange),
+                ),
+              ),
+              if (_showFirstRow)
+              Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top:8.0),
+                      child: Text(
+                        'Total: \$${_calculateTotal().toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Expected: \$${_calculateExpectedTotal().toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              // Conditionally show the second row
+              if (!_showFirstRow)
+              Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top:8.0),
+                      child: SizedBox(
+                        width: 100,
+                        child: TextField(
+                          controller: _changeController,
+                          decoration: const InputDecoration(
+                            labelText: '1\$ = Bs',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          onChanged: (value) => setState(() {}), // Update UI on change
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Total Bs. ${_calculateMultiplierValue(_calculateTotal()).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
         ],
       ),

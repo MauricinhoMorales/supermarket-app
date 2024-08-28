@@ -6,9 +6,11 @@ class ItemCard extends StatefulWidget {
   final String quantity;
   final String price;
   final String state;
+  final bool checked;
   final void Function(String, String, String) onItemChanged;
   final void Function() onDeleteItem;
   final void Function() onChangeState;
+  final void Function() onCheckItem;
   final ItemCardContext context;
 
   const ItemCard({
@@ -17,9 +19,11 @@ class ItemCard extends StatefulWidget {
     required this.quantity,
     required this.price,
     required this.state,
+    required this.checked,
     required this.onItemChanged,
     required this.onDeleteItem,
     required this.onChangeState,
+    required this.onCheckItem,
     required this.context,
   });
 
@@ -29,10 +33,10 @@ class ItemCard extends StatefulWidget {
 
 class _ItemCardState extends State<ItemCard> {
   bool _showAlternative = true;
-  bool _checked = false;
   late String itemName;
   late String quantity;
   late String price;
+  late bool checked;
 
   // Temporary variables for editing
   late String _tempItemName;
@@ -49,6 +53,7 @@ class _ItemCardState extends State<ItemCard> {
     itemName = widget.itemName;
     quantity = widget.quantity;
     price = widget.price;
+    checked = widget.checked;
 
     _tempItemName = itemName;
     _tempQuantity = quantity;
@@ -76,8 +81,9 @@ class _ItemCardState extends State<ItemCard> {
 
   void _checkItem() {
     setState(() {
-      _checked = !_checked;
+      checked = !checked;
     });
+    widget.onCheckItem();
   }
 
   void _updateItem() {
@@ -240,8 +246,8 @@ class _ItemCardState extends State<ItemCard> {
             if (widget.context == ItemCardContext.cart)
               IconButton(
                 icon: Icon(
-                  _checked ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: _checked ? Colors.green : Colors.red,
+                  checked ? Icons.check_box : Icons.check_box_outline_blank,
+                  color: checked ? Colors.green : Colors.red,
                 ),
                 onPressed: _checkItem,
               ),

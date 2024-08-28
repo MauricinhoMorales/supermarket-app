@@ -19,10 +19,10 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'shopping_storage.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 1, 
       onCreate: (db, version) {
         return db.execute(
-          'CREATE TABLE items(id INTEGER PRIMARY KEY, name TEXT, quantity TEXT, price TEXT, state TEXT)',
+          'CREATE TABLE items(id INTEGER PRIMARY KEY, name TEXT, quantity TEXT, price TEXT, state TEXT, checked INTEGER)',
         );
       },
     );
@@ -58,6 +58,15 @@ class DatabaseHelper {
     await db.update('items', {'state': 'storage'}, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> checkItem(int id) async {
+    final db = await database;
+    await db.update('items', {'checked': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> uncheckItem(int id) async {
+    final db = await database;
+    await db.update('items', {'checked': 0}, where: 'id = ?', whereArgs: [id]);
+  }
 
   Future<void> deleteItem(int id) async {
     final db = await database;
