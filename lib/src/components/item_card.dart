@@ -2,10 +2,10 @@ import 'package:app/src/utilities/context.dart';
 import 'package:flutter/material.dart';
 
 class ItemCard extends StatefulWidget {
-  final String itemName;
-  final String quantity;
-  final String price;
-  final String state;
+  final String? itemName;
+  final String? quantity;
+  final String? price;
+  final String? state;
   final bool checked;
   final void Function(String, String, String) onItemChanged;
   final void Function() onDeleteItem;
@@ -15,10 +15,10 @@ class ItemCard extends StatefulWidget {
 
   const ItemCard({
     super.key,
-    required this.itemName,
-    required this.quantity,
-    required this.price,
-    required this.state,
+    this.itemName,
+    this.quantity,
+    this.price,
+    this.state,
     required this.checked,
     required this.onItemChanged,
     required this.onDeleteItem,
@@ -50,9 +50,9 @@ class _ItemCardState extends State<ItemCard> {
   @override
   void initState() {
     super.initState();
-    itemName = widget.itemName;
-    quantity = widget.quantity;
-    price = widget.price;
+    itemName = widget.itemName ?? 'Default';
+    quantity = widget.quantity ?? '1';
+    price = widget.price ?? '0.0';
     checked = widget.checked;
 
     _tempItemName = itemName;
@@ -130,10 +130,13 @@ class _ItemCardState extends State<ItemCard> {
         child: const Text("EDIT"),
       ),
       secondaryBackground: Container(
-        color: widget.state == 'cart' ? Colors.red : Colors.green, // Swipe left to right action background
+        color: widget.state == 'cart'
+            ? Colors.red
+            : Colors.green, // Swipe left to right action background
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: widget.state == 'cart' ? const Text("REMOVE"): const Text("ADD"),
+        child:
+            widget.state == 'cart' ? const Text("REMOVE") : const Text("ADD"),
       ),
       child: _buildCardContent(
         child: Row(
@@ -230,10 +233,13 @@ class _ItemCardState extends State<ItemCard> {
         child: const Text("EDIT"),
       ),
       secondaryBackground: Container(
-        color: widget.state == 'cart' ? Colors.red : Colors.green, // Swipe left to right action background
+        color: widget.state == 'cart'
+            ? Colors.red
+            : Colors.green, // Swipe left to right action background
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: widget.state == 'cart' ? const Text("REMOVE"): const Text("ADD"),
+        child:
+            widget.state == 'cart' ? const Text("REMOVE") : const Text("ADD"),
       ),
       child: _buildCardContent(
         child: Row(
@@ -295,7 +301,8 @@ class _ItemCardState extends State<ItemCard> {
 
   Widget _buildCardContent({required Widget child}) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 90), // Ensuring a minimum height
+      constraints:
+          const BoxConstraints(minHeight: 90), // Ensuring a minimum height
       child: Card(
         margin: const EdgeInsets.all(8.0),
         elevation: 4.0,

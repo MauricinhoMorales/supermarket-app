@@ -3,14 +3,14 @@ import 'package:app/src/utilities/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:app/src/components/item_card.dart'; // Adjust the import path as necessary
 
-class ShoppingCart extends StatefulWidget {
-  const ShoppingCart({super.key});
+class ShoppingSession extends StatefulWidget {
+  const ShoppingSession({super.key});
 
   @override
-  _ShoppingCartState createState() => _ShoppingCartState();
+  ShoppingSessionState createState() => ShoppingSessionState();
 }
 
-class _ShoppingCartState extends State<ShoppingCart> {
+class ShoppingSessionState extends State<ShoppingSession> {
   final TextEditingController _changeController = TextEditingController();
   bool _showFirstRow = true; // State variable to toggle rows
   List<Map<String, dynamic>> allItems = [];
@@ -25,51 +25,60 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   Future<void> _loadItems() async {
-    final items = await _databaseHelper.getCartItems();
-    print('Loaded items from DB CART: $items');
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    final items = await _databaseHelper.getShoppingSessionItems(sessionId);
+    print('Loaded items from DB SESSION: $items');
     setState(() {
-      allItems = List<Map<String, dynamic>>.from(items);  // Ensure mutability
-      filteredItems = List<Map<String, dynamic>>.from(items)..sort((a, b) => a['checked'].compareTo(b['checked']));  // Ensure mutability
+      allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
+      filteredItems = List<Map<String, dynamic>>.from(items)
+        ..sort((a, b) =>
+            a['checked'].compareTo(b['checked'])); // Ensure mutability
     });
   }
 
   void _filterItems(String query) {
     setState(() {
       filteredItems = allItems
-          .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
+          .where((item) => item['name']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
           .toList();
       filteredItems.sort((a, b) => a['checked'].compareTo(b['checked']));
     });
   }
 
-  Future<void> _updateItem(int index, String name, String quantity, String price) async {
+  Future<void> _updateItem(
+      int index, String name, String quantity, String price) async {
     final id = filteredItems[index]['id'];
-    final updatedItem = {'name': name, 'quantity': quantity, 'price': price};
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
 
-    await _databaseHelper.updateItem(id, updatedItem);
+    await _databaseHelper.updateItemSession(
+        sessionId, id, name, price, quantity);
     await _loadItems(); // Reload items to refresh UI
   }
 
-  void _removeFromCart(int id) async {
-    await _databaseHelper.removeFromCart(id); // Delete from database
+  void _removeFromCart(int itemId) async {
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    await _databaseHelper.deleteItemFromShoppingSession(sessionId, itemId);
     await _loadItems();
   }
 
-  void _changeCheck(int id, int check) async {
-    if (check == 1){
-      await _databaseHelper.uncheckItem(id);
+  void _changeCheck(int itemId, int checked) async {
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    if (checked == 1) {
+      await _databaseHelper.updateItemCheckStatus(sessionId, itemId, 0);
     } else {
-      await _databaseHelper.checkItem(id);
+      await _databaseHelper.updateItemCheckStatus(sessionId, itemId, 1);
     }
     await _loadItems();
   }
-
 
   double _calculateExpectedTotal() {
     double total = 0.0;
     for (final item in allItems) {
       final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
-      final price = double.tryParse(item['price'] ?? '') ?? 0;
+      final price = double.tryParse(item['current_price'] ?? '') ?? 0;
       total += quantity * price;
     }
     return total;
@@ -81,7 +90,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       // Check if the item is checked
       if (item['checked'] == 1) {
         final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
-        final price = double.tryParse(item['price'] ?? '') ?? 0;
+        final price = double.tryParse(item['current_price'] ?? '') ?? 0;
         total += quantity * price;
       }
     }
@@ -121,23 +130,24 @@ class _ShoppingCartState extends State<ShoppingCart> {
               itemCount: filteredItems.length,
               itemBuilder: (context, index) {
                 return ItemCard(
-                  key: ValueKey(filteredItems[index]['name']), // Unique key for each card
+                  key: ValueKey(
+                      filteredItems[index]['name']), // Unique key for each card
                   itemName: filteredItems[index]['name'],
                   quantity: filteredItems[index]['quantity'],
-                  price: filteredItems[index]['price'],
-                  state: filteredItems[index]['state'], 
-                  checked: filteredItems[index]['checked'] == 1 ? true: false,
-                  context: ItemCardContext.cart, 
+                  price: filteredItems[index]['current_price'],
+                  state: "cart",
+                  checked: filteredItems[index]['checked'] == 1 ? true : false,
+                  context: ItemCardContext.cart,
                   onItemChanged: (name, quantity, price) {
                     _updateItem(index, name, quantity, price);
                   },
-                    onDeleteItem: () {
-                  }, 
-                  onChangeState: () {  
+                  onDeleteItem: () {},
+                  onChangeState: () {
                     _removeFromCart(filteredItems[index]['id']);
-                  }, 
-                  onCheckItem: () {  
-                    _changeCheck(filteredItems[index]['id'], filteredItems[index]['checked'] );
+                  },
+                  onCheckItem: () {
+                    _changeCheck(filteredItems[index]['id'],
+                        filteredItems[index]['checked']);
                   },
                 ); // Display the ItemCard for each filtered item
               },
@@ -152,39 +162,42 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 child: ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _showFirstRow = !_showFirstRow; // Toggle the boolean state
+                      _showFirstRow =
+                          !_showFirstRow; // Toggle the boolean state
                     });
                   },
                   child: const Icon(Icons.currency_exchange),
                 ),
               ),
               if (_showFirstRow)
-              Column(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top:8.0),
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                       child: Text(
                         'Total: \$${_calculateTotal().toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
                         'Expected: \$${_calculateExpectedTotal().toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
               // Conditionally show the second row
               if (!_showFirstRow)
-              Column(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top:8.0),
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                       child: SizedBox(
                         width: 100,
                         child: TextField(
@@ -193,8 +206,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                             labelText: '1\$ = Bs',
                             border: OutlineInputBorder(),
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          onChanged: (value) => setState(() {}), // Update UI on change
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          onChanged: (value) =>
+                              setState(() {}), // Update UI on change
                         ),
                       ),
                     ),
@@ -202,7 +217,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
                         'Total Bs. ${_calculateMultiplierValue(_calculateTotal()).toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],

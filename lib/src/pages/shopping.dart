@@ -1,15 +1,12 @@
-
-import 'package:app/src/pages/shopping_cart.dart';
+import 'package:app/src/pages/shopping_session.dart';
 import 'package:app/src/pages/shopping_storage.dart';
 import 'package:flutter/material.dart';
 
 class ShoppingPage extends StatelessWidget {
-
   const ShoppingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     return DefaultTabController(
       initialIndex: 1,
       length: 2,
@@ -30,7 +27,7 @@ class ShoppingPage extends StatelessWidget {
         body: const TabBarView(
           children: <Widget>[
             Center(
-              child: ShoppingCart(),
+              child: ShoppingSession(),
             ),
             Center(
               child: ShoppingStorage(),

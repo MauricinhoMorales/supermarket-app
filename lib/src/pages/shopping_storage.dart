@@ -7,10 +7,10 @@ class ShoppingStorage extends StatefulWidget {
   const ShoppingStorage({super.key});
 
   @override
-  _ShoppingStorageState createState() => _ShoppingStorageState();
+  ShoppingStorageState createState() => ShoppingStorageState();
 }
 
-class _ShoppingStorageState extends State<ShoppingStorage> {
+class ShoppingStorageState extends State<ShoppingStorage> {
   List<Map<String, dynamic>> allItems = [];
   List<Map<String, dynamic>> filteredItems = [];
   final TextEditingController _searchController = TextEditingController();
@@ -23,77 +23,57 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
   }
 
   Future<void> _loadItems() async {
-    final items = await _databaseHelper.getItems();
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    final items = await _databaseHelper.getItemsWithSessionStatus(sessionId);
     print('Loaded items from DB STORAGE: $items');
     setState(() {
-      allItems = List<Map<String, dynamic>>.from(items);  // Ensure mutability
-      filteredItems = List<Map<String, dynamic>>.from(items)
-        ..sort((a, b) {
-          if (a['state'] == 'storage' && b['state'] != 'storage') {
-            return -1; // Put 'storage' items at the top
-          } else if (a['state'] != 'storage' && b['state'] == 'storage') {
-            return 1;  // Put 'non-storage' items below
-          } else {
-            return 0;  // Keep order the same if states are equal
-          }
-        });
+      allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
+      filteredItems = List<Map<String, dynamic>>.from(items);
     });
   }
 
   void _filterItems(String query) {
     setState(() {
       filteredItems = allItems
-          .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
-          .toList()
-        ..sort((a, b) {
-          if (a['state'] == 'storage' && b['state'] != 'storage') {
-            return -1; // Put 'storage' items at the top
-          } else if (a['state'] != 'storage' && b['state'] == 'storage') {
-            return 1;  // Put 'non-storage' items below
-          } else {
-            return 0;  // Keep order the same if states are equal
-          }
-        });
+          .where((item) => item['name']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+          .toList();
     });
   }
 
-
-  Future<void> _updateItem(int index, String name, String quantity, String price) async {
+  Future<void> _updateItem(int index, String name, String price) async {
     final id = filteredItems[index]['id'];
-    final updatedItem = {'name': name, 'quantity': quantity, 'price': price};
 
-    await _databaseHelper.updateItem(id, updatedItem);
-    await _loadItems(); // Reload items to refresh UI
+    await _databaseHelper.updateItemStorage(id, name, price);
+    await _loadItems();
   }
 
-  Future<void> _addItem(String name, String quantity, String price) async {
-    final newItem = {
-      'name': name,
-      'quantity': quantity,
-      'price': price,
-      'state': 'storage',
-      'checked': 0
-    };
-    await _databaseHelper.insertItem(newItem);
-    await _loadItems(); // Reload items to reflect the new addition
+  Future<void> _addItem(String name, String price) async {
+    await _databaseHelper.insertItem(name, price);
+    await _loadItems();
   }
 
   void _deleteItem(int id, String itemName) async {
     bool confirmed = await _showDeleteConfirmationDialog(id, itemName);
-    
+
     if (confirmed) {
-      await _databaseHelper.deleteItem(id); // Delete from database
-      await _loadItems(); // Reload the items after deletion
+      await _databaseHelper.deleteItem(id);
+      await _loadItems();
     }
   }
 
-  void _changeState(int id, String state) async {
-      if (state == 'cart') {
-        await _databaseHelper.removeFromCart(id);  // Update the database to remove from cart
-      } else {
-        await _showQuantityDialog(context, id, state);
-      }
-      await _loadItems();  // Reload the items to refresh the UI
+  void _addorRemoveItem(int itemId) async {
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    final value =
+        await _databaseHelper.isItemInShoppingSession(sessionId, itemId);
+    if (value) {
+      await _databaseHelper.deleteItemFromShoppingSession(sessionId, itemId);
+    } else {
+      await _showQuantityDialog(context, sessionId, itemId);
+    }
+    await _loadItems();
   }
 
   Future<bool> _showDeleteConfirmationDialog(int id, String itemName) async {
@@ -119,7 +99,9 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
           ],
         );
       },
-    ).then((value) => value ?? false); // Return false if dialog is dismissed without selecting an option
+    ).then((value) =>
+        value ??
+        false); // Return false if dialog is dismissed without selecting an option
   }
 
   Future<void> _showAddItemDialog(BuildContext context) async {
@@ -161,7 +143,7 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
                 final price = priceController.text;
 
                 if (name.isNotEmpty && price.isNotEmpty) {
-                  await _addItem(name, '0', price); // Add the item to the database
+                  await _addItem(name, price); // Add the item to the database
                   Navigator.of(context).pop(); // Dismiss the dialog
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +158,8 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
     );
   }
 
-  Future<void> _showQuantityDialog(BuildContext context, int id, String state) async {
+  Future<void> _showQuantityDialog(
+      BuildContext context, int sessionId, int id) async {
     final TextEditingController quantityController = TextEditingController();
 
     return showDialog<void>(
@@ -209,9 +192,8 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
                 final quantity = quantityController.text;
 
                 if (quantity.isNotEmpty) {
-                  await _databaseHelper.addToCart(id);  // Update the database to add to cart
-                  // Optionally, you can update the quantity in the database here as well
-                  await _databaseHelper.updateItem(id, {'quantity': quantity});
+                  await _databaseHelper.addItemToShoppingSession(sessionId, id,
+                      quantity); // Update the database to add to cart
                   Navigator.of(context).pop(); // Return the quantity
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -254,32 +236,36 @@ class _ShoppingStorageState extends State<ShoppingStorage> {
               itemCount: filteredItems.length,
               itemBuilder: (context, index) {
                 return ItemCard(
-                  key: ValueKey(filteredItems[index]['name']), // Unique key for each card
+                  key: ValueKey(
+                      filteredItems[index]['name']), // Unique key for each card
                   itemName: filteredItems[index]['name'],
-                  quantity: filteredItems[index]['quantity'],
-                  price: filteredItems[index]['price'],
-                  state: filteredItems[index]['state'],
-                  checked: filteredItems[index]['checked'] == 1 ? true: false,
-                  context: ItemCardContext.storage, 
+                  price: filteredItems[index]['current_price'],
+                  state: filteredItems[index]['in_session'] == 1
+                      ? "cart"
+                      : "storage",
+                  checked: false,
+                  context: ItemCardContext.storage,
                   onItemChanged: (name, quantity, price) {
-                    _updateItem(index, name, quantity, price);
+                    _updateItem(index, name, price);
                   },
-                    onDeleteItem: () {
-                    _deleteItem(filteredItems[index]['id'],filteredItems[index]['name']); // Pass the delete function
-                  },  
-                  onChangeState: () {  
-                    _changeState(filteredItems[index]['id'], filteredItems[index]['state']);
+                  onDeleteItem: () {
+                    _deleteItem(filteredItems[index]['id'],
+                        filteredItems[index]['name']);
                   },
-                  onCheckItem: () {}, 
+                  onChangeState: () {
+                    _addorRemoveItem(filteredItems[index]['id']);
+                  },
+                  onCheckItem: () {},
                 ); // Display the ItemCard for each filtered item
               },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 8.0, top:8.0),
+            padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
             child: ElevatedButton(
               onPressed: () {
-                _showAddItemDialog(context); // Show the dialog to add a new item
+                _showAddItemDialog(
+                    context); // Show the dialog to add a new item
               },
               child: const Text('Add Item'),
             ),

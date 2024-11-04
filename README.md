@@ -2,6 +2,8 @@
 
 ## Usage
 
+Open a Device from AndroidStudio or use Edge as a Device
+
 Execute:
 ```
 flutter run 
