@@ -12,11 +12,11 @@ class ShoppingSession extends StatefulWidget {
 
 class ShoppingSessionState extends State<ShoppingSession> {
   final TextEditingController _changeController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   bool _showFirstRow = true; // State variable to toggle rows
   List<Map<String, dynamic>> allItems = [];
   List<Map<String, dynamic>> filteredItems = [];
-  final TextEditingController _searchController = TextEditingController();
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
@@ -25,27 +25,45 @@ class ShoppingSessionState extends State<ShoppingSession> {
   }
 
   Future<void> _loadItems() async {
-    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
-    final items = await _databaseHelper.getShoppingSessionItems(sessionId);
-    print('Loaded items from DB SESSION: $items');
-    setState(() {
-      allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
-      filteredItems = List<Map<String, dynamic>>.from(items)
-        ..sort((a, b) =>
-            a['checked'].compareTo(b['checked'])); // Ensure mutability
-    });
+    try {
+      final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+      final items = await _databaseHelper.getShoppingSessionItems(sessionId);
+      print('Loaded items from DB SESSION: $items');
+
+      if (mounted) {
+        setState(() {
+          allItems =
+              List<Map<String, dynamic>>.from(items); // Ensure mutability
+          filteredItems = List<Map<String, dynamic>>.from(items)
+            ..sort((a, b) {
+              final checkedA = a['checked'] ?? 0; // Default to 0 if null
+              final checkedB = b['checked'] ?? 0; // Default to 0 if null
+              return checkedA.compareTo(checkedB);
+            });
+        });
+      }
+    } catch (error) {
+      print('Error loading items: $error');
+      // Optionally show an alert or snackbar to inform the user of the error
+    }
   }
 
   void _filterItems(String query) {
-    setState(() {
-      filteredItems = allItems
-          .where((item) => item['name']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase()))
-          .toList();
-      filteredItems.sort((a, b) => a['checked'].compareTo(b['checked']));
-    });
+    if (mounted) {
+      setState(() {
+        filteredItems = allItems
+            .where((item) => item['name']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+            .toList();
+        filteredItems.sort((a, b) {
+          final checkedA = a['checked'] ?? 0; // Default to 0 if null
+          final checkedB = b['checked'] ?? 0; // Default to 0 if null
+          return checkedA.compareTo(checkedB);
+        });
+      });
+    }
   }
 
   Future<void> _updateItem(
@@ -105,6 +123,7 @@ class ShoppingSessionState extends State<ShoppingSession> {
   @override
   void dispose() {
     _searchController.dispose();
+    _changeController.dispose(); // Dispose of the change controller
     super.dispose();
   }
 
