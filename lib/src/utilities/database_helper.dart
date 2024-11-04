@@ -276,4 +276,21 @@ class DatabaseHelper {
     }
     return await insertShoppingSession();
   }
+
+  Future<void> updateSessionDate(int id) async {
+    final db = await database; // Get the database instance
+    final newDate = DateTime.now();
+
+    String formattedDate =
+        '${newDate.day.toString().padLeft(2, '0')}/${newDate.month.toString().padLeft(2, '0')}/${newDate.year.toString().substring(2)}       ${newDate.hour.toString().padLeft(2, '0')}:${newDate.minute.toString().padLeft(2, '0')}';
+    // Perform the update
+    await db.update(
+      'shopping_sessions', // The table name
+      {'date': formattedDate}, // The column to update and new value
+      where: 'id = ?', // Condition
+      whereArgs: [id], // Arguments for the condition
+    );
+
+    print('Updated date for session ID $id to $newDate');
+  }
 }

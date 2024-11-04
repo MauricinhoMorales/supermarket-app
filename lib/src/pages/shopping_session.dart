@@ -77,6 +77,8 @@ class ShoppingSessionState extends State<ShoppingSession> {
   }
 
   void _insertShoppingSession() async {
+    final sessionId = await _databaseHelper.getLatestShoppingSessionId();
+    await _databaseHelper.updateSessionDate(sessionId);
     await _databaseHelper.insertShoppingSession();
     await _loadItems();
   }
