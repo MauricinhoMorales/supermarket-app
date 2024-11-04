@@ -13,6 +13,7 @@ class SessionItemsPage extends StatefulWidget {
 }
 
 class SessionItemsPageState extends State<SessionItemsPage> {
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> allItems = [];
   List<Map<String, dynamic>> filteredItems = [];
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -25,16 +26,9 @@ class SessionItemsPageState extends State<SessionItemsPage> {
 
   Future<void> _loadItems() async {
     try {
-      final test = await _databaseHelper.getShoppingSessions();
-      print('Shopping Sessions ALL: $test');
-
-      final test2 = await _databaseHelper.getShoppingItems();
-      print('Shopping Items ALL: $test2');
-
       final items =
           await _databaseHelper.getShoppingSessionItems(widget.sessionId);
-      print(
-          'Loaded items from DB Session Items: $items id: ${widget.sessionId}');
+      print('Loaded items from DB Session Items: $items');
 
       setState(() {
         allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
@@ -68,25 +62,41 @@ class SessionItemsPageState extends State<SessionItemsPage> {
       appBar: AppBar(
         title: const Text('Session Items'),
       ),
-      body: ListView.builder(
-        itemCount: filteredItems.length,
-        itemBuilder: (context, index) {
-          return ItemCard(
-            key: ValueKey(
-                filteredItems[index]['name']), // Unique key for each card
-            itemName: filteredItems[index]['name'],
-            quantity: filteredItems[index]['quantity'],
-            price: filteredItems[index]['current_price'],
-            state: ItemCardStatus.inSession,
-            checked: true,
-            context: ItemCardContext.inDisplay,
-            onItemChanged: (name, quantity, price) {},
-            onDeleteItem: () {},
-            onChangeState: () {},
-            onCheckItem: () {},
-          );
-        },
-      ),
+      body: Column(children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search Items',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: _filterItems, // Call filter function on text change
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: filteredItems.length,
+            itemBuilder: (context, index) {
+              return ItemCard(
+                key: ValueKey(
+                    filteredItems[index]['name']), // Unique key for each card
+                itemName: filteredItems[index]['name'],
+                quantity: filteredItems[index]['quantity'],
+                price: filteredItems[index]['current_price'],
+                state: ItemCardStatus.inSession,
+                checked: true,
+                context: ItemCardContext.inDisplay,
+                onItemChanged: (name, quantity, price) {},
+                onDeleteItem: () {},
+                onChangeState: () {},
+                onCheckItem: () {},
+              );
+            },
+          ),
+        ),
+      ]),
     );
   }
 }

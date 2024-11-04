@@ -128,7 +128,7 @@ class ShoppingSessionState extends State<ShoppingSession> {
   @override
   void dispose() {
     _searchController.dispose();
-    _changeController.dispose(); // Dispose of the change controller
+    _changeController.dispose();
     super.dispose();
   }
 
