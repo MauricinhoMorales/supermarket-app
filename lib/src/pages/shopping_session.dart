@@ -76,6 +76,11 @@ class ShoppingSessionState extends State<ShoppingSession> {
     await _loadItems(); // Reload items to refresh UI
   }
 
+  void _insertShoppingSession() async {
+    await _databaseHelper.insertShoppingSession();
+    await _loadItems();
+  }
+
   void _removeFromCart(int itemId) async {
     final sessionId = await _databaseHelper.getLatestShoppingSessionId();
     await _databaseHelper.deleteItemFromShoppingSession(sessionId, itemId);
@@ -244,6 +249,15 @@ class ShoppingSessionState extends State<ShoppingSession> {
                 ),
             ],
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+            child: ElevatedButton(
+              onPressed: () {
+                _insertShoppingSession();
+              },
+              child: const Text('New Session'),
+            ),
+          )
         ],
       ),
     );

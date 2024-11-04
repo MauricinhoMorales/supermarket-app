@@ -185,7 +185,7 @@ class DatabaseHelper {
   Future<int> insertShoppingSession() async {
     final db = await database;
     return await db.insert('shopping_sessions', {
-      'shop_name': "Rio",
+      'place': "Rio",
     });
   }
 
