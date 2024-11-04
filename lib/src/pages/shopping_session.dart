@@ -1,7 +1,7 @@
 import 'package:app/src/utilities/context.dart';
 import 'package:app/src/utilities/database_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:app/src/components/item_card.dart'; // Adjust the import path as necessary
+import 'package:app/src/components/item_card.dart';
 
 class ShoppingSession extends StatefulWidget {
   const ShoppingSession({super.key});
@@ -159,9 +159,9 @@ class ShoppingSessionState extends State<ShoppingSession> {
                   itemName: filteredItems[index]['name'],
                   quantity: filteredItems[index]['quantity'],
                   price: filteredItems[index]['current_price'],
-                  state: "cart",
+                  state: ItemCardStatus.inSession,
                   checked: filteredItems[index]['checked'] == 1 ? true : false,
-                  context: ItemCardContext.cart,
+                  context: ItemCardContext.inSession,
                   onItemChanged: (name, quantity, price) {
                     _updateItem(index, name, quantity, price);
                   },

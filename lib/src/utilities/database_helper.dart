@@ -69,6 +69,18 @@ class DatabaseHelper {
     return await db.query('items');
   }
 
+  // Retrieve all items
+  Future<List<Map<String, dynamic>>> getShoppingSessions() async {
+    final db = await database;
+    return await db.query('shopping_sessions');
+  }
+
+  // Retrieve all items
+  Future<List<Map<String, dynamic>>> getShoppingItems() async {
+    final db = await database;
+    return await db.query('shopping_items');
+  }
+
   // Retrieve item name, current price, and in_session flag for the given session_id
   Future<List<Map<String, dynamic>>> getItemsWithSessionStatus(
       int sessionId) async {
@@ -262,6 +274,6 @@ class DatabaseHelper {
     if (result.isNotEmpty) {
       return result.first['id'] as int;
     }
-    return 0;
+    return await insertShoppingSession();
   }
 }

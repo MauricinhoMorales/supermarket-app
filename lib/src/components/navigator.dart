@@ -14,7 +14,7 @@ class Navigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5, // Update length to 5 since there are 5 tabs
+      length: 4, // Update length to 5 since there are 5 tabs
       child: Scaffold(
         body: TabBarView(
           children: [

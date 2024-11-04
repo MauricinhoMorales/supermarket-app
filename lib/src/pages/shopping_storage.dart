@@ -26,21 +26,25 @@ class ShoppingStorageState extends State<ShoppingStorage> {
     final sessionId = await _databaseHelper.getLatestShoppingSessionId();
     final items = await _databaseHelper.getItemsWithSessionStatus(sessionId);
     print('Loaded items from DB STORAGE: $items');
-    setState(() {
-      allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
-      filteredItems = List<Map<String, dynamic>>.from(items);
-    });
+    if (mounted) {
+      setState(() {
+        allItems = List<Map<String, dynamic>>.from(items); // Ensure mutability
+        filteredItems = List<Map<String, dynamic>>.from(items);
+      });
+    }
   }
 
   void _filterItems(String query) {
-    setState(() {
-      filteredItems = allItems
-          .where((item) => item['name']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase()))
-          .toList();
-    });
+    if (mounted) {
+      setState(() {
+        filteredItems = allItems
+            .where((item) => item['name']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+            .toList();
+      });
+    }
   }
 
   Future<void> _updateItem(int index, String name, String price) async {
@@ -241,10 +245,10 @@ class ShoppingStorageState extends State<ShoppingStorage> {
                   itemName: filteredItems[index]['name'],
                   price: filteredItems[index]['current_price'],
                   state: filteredItems[index]['in_session'] == 1
-                      ? "cart"
-                      : "storage",
+                      ? ItemCardStatus.inSession
+                      : ItemCardStatus.inStorage,
                   checked: false,
-                  context: ItemCardContext.storage,
+                  context: ItemCardContext.inStorage,
                   onItemChanged: (name, quantity, price) {
                     _updateItem(index, name, price);
                   },

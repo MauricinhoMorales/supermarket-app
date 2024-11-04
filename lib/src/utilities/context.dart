@@ -1,1 +1,3 @@
-enum ItemCardContext { cart, storage }
+enum ItemCardContext { inSession, inStorage, inDisplay }
+
+enum ItemCardStatus { inSession, inStorage }

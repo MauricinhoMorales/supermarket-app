@@ -5,26 +5,26 @@ class ItemCard extends StatefulWidget {
   final String? itemName;
   final String? quantity;
   final String? price;
-  final String? state;
   final bool checked;
   final void Function(String, String, String) onItemChanged;
   final void Function() onDeleteItem;
   final void Function() onChangeState;
   final void Function() onCheckItem;
   final ItemCardContext context;
+  final ItemCardStatus state;
 
   const ItemCard({
     super.key,
     this.itemName,
     this.quantity,
     this.price,
-    this.state,
     required this.checked,
     required this.onItemChanged,
     required this.onDeleteItem,
     required this.onChangeState,
     required this.onCheckItem,
     required this.context,
+    required this.state,
   });
 
   @override
@@ -130,13 +130,14 @@ class _ItemCardState extends State<ItemCard> {
         child: const Text("EDIT"),
       ),
       secondaryBackground: Container(
-        color: widget.state == 'cart'
+        color: widget.state == ItemCardStatus.inSession
             ? Colors.red
-            : Colors.green, // Swipe left to right action background
+            : Colors.green,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child:
-            widget.state == 'cart' ? const Text("REMOVE") : const Text("ADD"),
+        child: widget.state == ItemCardStatus.inSession
+            ? const Text("REMOVE")
+            : const Text("ADD"),
       ),
       child: _buildCardContent(
         child: Row(
@@ -172,7 +173,7 @@ class _ItemCardState extends State<ItemCard> {
               ),
             ),
             const Spacer(),
-            if (widget.context == ItemCardContext.cart)
+            if (widget.context == ItemCardContext.inSession)
               Expanded(
                 flex: 2,
                 child: TextField(
@@ -188,7 +189,7 @@ class _ItemCardState extends State<ItemCard> {
                   },
                 ),
               ),
-            if (widget.context == ItemCardContext.cart) const Spacer(),
+            if (widget.context == ItemCardContext.inSession) const Spacer(),
             IconButton(
               icon: const Icon(Icons.check),
               onPressed: () {
@@ -201,7 +202,7 @@ class _ItemCardState extends State<ItemCard> {
                 _updateItem();
               },
             ),
-            if (widget.context == ItemCardContext.storage)
+            if (widget.context == ItemCardContext.inStorage)
               IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: widget.onDeleteItem,
@@ -233,23 +234,26 @@ class _ItemCardState extends State<ItemCard> {
         child: const Text("EDIT"),
       ),
       secondaryBackground: Container(
-        color: widget.state == 'cart'
+        color: widget.state == ItemCardStatus.inSession
             ? Colors.red
             : Colors.green, // Swipe left to right action background
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child:
-            widget.state == 'cart' ? const Text("REMOVE") : const Text("ADD"),
+        child: widget.state == ItemCardStatus.inSession
+            ? const Text("REMOVE")
+            : const Text("ADD"),
       ),
       child: _buildCardContent(
         child: Row(
           children: [
-            if (widget.context == ItemCardContext.storage)
+            if (widget.context == ItemCardContext.inStorage)
               Icon(
                 Icons.file_download_outlined,
-                color: widget.state == 'cart' ? Colors.red : Colors.blue,
+                color: widget.state == ItemCardStatus.inSession
+                    ? Colors.red
+                    : Colors.blue,
               ),
-            if (widget.context == ItemCardContext.cart)
+            if (widget.context == ItemCardContext.inSession)
               IconButton(
                 icon: Icon(
                   checked ? Icons.check_box : Icons.check_box_outline_blank,
@@ -281,7 +285,7 @@ class _ItemCardState extends State<ItemCard> {
               ),
             ),
             const Spacer(),
-            if (widget.context == ItemCardContext.cart)
+            if (widget.context != ItemCardContext.inStorage)
               Expanded(
                 flex: 2,
                 child: Text(
