@@ -1,4 +1,4 @@
-import 'package:app/src/pages/recipes.dart';
+// import 'package:app/src/pages/recipes.dart';
 import 'package:app/src/pages/shopping.dart';
 import 'package:app/src/pages/storage.dart';
 import 'package:app/src/pages/user.dart';
@@ -21,7 +21,7 @@ class Navigation extends StatelessWidget {
             const ShoppingPage(),
             const RegistryPage(),
             const StoragePage(),
-            const RecipesPage(),
+            // const RecipesPage(),
             UserPage(toggleTheme: toggleTheme), // Pass toggleTheme here
           ],
         ),
@@ -32,7 +32,7 @@ class Navigation extends StatelessWidget {
               Tab(icon: Icon(Icons.shopping_bag)),
               Tab(icon: Icon(Icons.list)),
               Tab(icon: Icon(Icons.store_outlined)),
-              Tab(icon: Icon(Icons.receipt_long_rounded)),
+              // Tab(icon: Icon(Icons.receipt_long_rounded)),
               Tab(icon: Icon(Icons.person)),
             ],
           ),
