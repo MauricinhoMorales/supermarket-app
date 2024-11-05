@@ -59,12 +59,9 @@ class SessionItemsPageState extends State<SessionItemsPage> {
   double _calculateTotal() {
     double total = 0.0;
     for (final item in allItems) {
-      // Check if the item is checked
-      if (item['checked'] == 1) {
-        final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
-        final price = double.tryParse(item['current_price'] ?? '') ?? 0;
-        total += quantity * price;
-      }
+      final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
+      final price = double.tryParse(item['current_price'] ?? '') ?? 0;
+      total += quantity * price;
     }
     return total;
   }

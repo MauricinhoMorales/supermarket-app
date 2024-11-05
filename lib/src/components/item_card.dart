@@ -96,7 +96,8 @@ class _ItemCardState extends State<ItemCard> {
   ) {
     final quantityValue = double.tryParse(quantity ?? '') ?? 0;
     final priceValue = double.tryParse(price ?? '') ?? 0;
-    return quantityValue * priceValue;
+    final total = quantityValue * priceValue;
+    return double.parse(total.toStringAsFixed(2));
   }
 
   @override
@@ -285,10 +286,10 @@ class _ItemCardState extends State<ItemCard> {
             Expanded(
               flex: 2,
               child: Text(
-                '$price \$',
+                '$price\$',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16.0,
+                  fontSize: 14.0,
                   fontWeight: FontWeight.normal,
                 ),
               ),
@@ -298,10 +299,10 @@ class _ItemCardState extends State<ItemCard> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  'x $quantity',
+                  'x$quantity',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
@@ -311,10 +312,10 @@ class _ItemCardState extends State<ItemCard> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  '= ${_calculateTotal(widget.price, widget.quantity)} \$',
+                  '${_calculateTotal(widget.price, widget.quantity)}\$',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
