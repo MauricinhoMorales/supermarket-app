@@ -1,32 +1,61 @@
 import 'package:app/src/pages/session_items.dart';
 import 'package:flutter/material.dart';
 
-class ShoppingSessionCard extends StatelessWidget {
+class ShoppingSessionCard extends StatefulWidget {
   final String place;
   final String date;
   final int sessionId;
+  final void Function() onDeleteItem;
 
   const ShoppingSessionCard({
     super.key,
     required this.place,
     required this.date,
     required this.sessionId,
+    required this.onDeleteItem,
   });
 
   @override
+  _ShoppingSessionCardState createState() => _ShoppingSessionCardState();
+}
+
+class _ShoppingSessionCardState extends State<ShoppingSessionCard> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate to the new page to show items
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SessionItemsPage(
-              sessionId: sessionId,
+    return Dismissible(
+      key: ValueKey('edit-${widget.sessionId}'),
+      direction: DismissDirection.horizontal,
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          widget.onDeleteItem();
+        } else if (direction == DismissDirection.startToEnd) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SessionItemsPage(
+                sessionId: widget.sessionId,
+              ),
             ),
-          ),
-        );
+          );
+        }
+        return false;
       },
+      background: Container(
+        color: Colors.grey,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Text("CHECK"),
+      ),
+      secondaryBackground: Container(
+          color: Colors.red,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: const Text("REMOVE")),
       child: Container(
         constraints: const BoxConstraints(minHeight: 90),
         child: Card(
@@ -39,7 +68,7 @@ class ShoppingSessionCard extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    place,
+                    widget.place,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16.0,
@@ -51,7 +80,7 @@ class ShoppingSessionCard extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: Text(
-                    date,
+                    widget.date,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16.0,

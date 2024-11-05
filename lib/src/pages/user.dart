@@ -15,7 +15,6 @@ class UserPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("User"),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: toggleTheme,

@@ -32,6 +32,41 @@ class RegistryState extends State<RegistryPage> {
     }
   }
 
+  void _deleteItem(int sessionId) async {
+    bool confirmed = await _showDeleteConfirmationDialog();
+
+    if (confirmed) {
+      await _databaseHelper.deleteShoppingSession(sessionId);
+      await _loadItems();
+    }
+  }
+
+  Future<bool> _showDeleteConfirmationDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete?'),
+          content: const Text('Are you sure you want to delete this session?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    ).then((value) => value ?? false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +83,10 @@ class RegistryState extends State<RegistryPage> {
                   place: filteredItems[index]['place'],
                   date: filteredItems[index]['date'],
                   sessionId: filteredItems[index]['id'],
-                ); // Display the ItemCard for each filtered item
+                  onDeleteItem: () {
+                    _deleteItem(filteredItems[index]['id']);
+                  },
+                );
               },
             ),
           ),

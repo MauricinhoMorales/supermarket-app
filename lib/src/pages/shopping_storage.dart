@@ -59,15 +59,6 @@ class ShoppingStorageState extends State<ShoppingStorage> {
     await _loadItems();
   }
 
-  void _deleteItem(int id, String itemName) async {
-    bool confirmed = await _showDeleteConfirmationDialog(id, itemName);
-
-    if (confirmed) {
-      await _databaseHelper.deleteItem(id);
-      await _loadItems();
-    }
-  }
-
   void _addorRemoveItem(int itemId) async {
     final sessionId = await _databaseHelper.getLatestShoppingSessionId();
     final value =
@@ -78,6 +69,15 @@ class ShoppingStorageState extends State<ShoppingStorage> {
       await _showQuantityDialog(context, sessionId, itemId);
     }
     await _loadItems();
+  }
+
+  void _deleteItem(int id, String itemName) async {
+    bool confirmed = await _showDeleteConfirmationDialog(id, itemName);
+
+    if (confirmed) {
+      await _databaseHelper.deleteItem(id);
+      await _loadItems();
+    }
   }
 
   Future<bool> _showDeleteConfirmationDialog(int id, String itemName) async {

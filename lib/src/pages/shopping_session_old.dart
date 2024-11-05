@@ -14,6 +14,7 @@ class ShoppingSessionState extends State<ShoppingSession> {
   final TextEditingController _changeController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  bool _showFirstRow = true; // State variable to toggle rows
   List<Map<String, dynamic>> allItems = [];
   List<Map<String, dynamic>> filteredItems = [];
 
@@ -121,6 +122,11 @@ class ShoppingSessionState extends State<ShoppingSession> {
     return total;
   }
 
+  double _calculateMultiplierValue(double total) {
+    final multiplier = double.tryParse(_changeController.text) ?? 0;
+    return total * multiplier;
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -176,22 +182,73 @@ class ShoppingSessionState extends State<ShoppingSession> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              // Button to toggle rows
               Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  'Total: \$${_calculateTotal().toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 20.0, fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showFirstRow =
+                          !_showFirstRow; // Toggle the boolean state
+                    });
+                  },
+                  child: const Icon(Icons.currency_exchange),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  'Expected: \$${_calculateExpectedTotal().toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 20.0, fontWeight: FontWeight.bold),
+              if (_showFirstRow)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: Text(
+                        'Total: \$${_calculateTotal().toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Expected: \$${_calculateExpectedTotal().toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+              // Conditionally show the second row
+              if (!_showFirstRow)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: SizedBox(
+                        width: 100,
+                        child: TextField(
+                          controller: _changeController,
+                          decoration: const InputDecoration(
+                            labelText: '1\$ = Bs',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          onChanged: (value) =>
+                              setState(() {}), // Update UI on change
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Total Bs. ${_calculateMultiplierValue(_calculateTotal()).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           Padding(

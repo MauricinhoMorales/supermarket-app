@@ -90,6 +90,15 @@ class _ItemCardState extends State<ItemCard> {
     widget.onItemChanged(itemName, quantity, price);
   }
 
+  double _calculateTotal(
+    String? price,
+    String? quantity,
+  ) {
+    final quantityValue = double.tryParse(quantity ?? '') ?? 0;
+    final priceValue = double.tryParse(price ?? '') ?? 0;
+    return quantityValue * priceValue;
+  }
+
   @override
   void dispose() {
     _quantityController.dispose();
@@ -109,7 +118,7 @@ class _ItemCardState extends State<ItemCard> {
   Widget _cardEditValue() {
     return Dismissible(
       key: ValueKey('edit-${itemName}'),
-      direction: DismissDirection.horizontal, // Enable swipe in both directions
+      direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {
         } else if (direction == DismissDirection.startToEnd) {
@@ -219,11 +228,11 @@ class _ItemCardState extends State<ItemCard> {
       direction: DismissDirection.horizontal, // Enable swipe in both directions
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          // Swiped left to right
-          widget.onChangeState(); // Handle delete action
+          widget.onChangeState();
         } else if (direction == DismissDirection.startToEnd) {
-          // Swiped right to left
-          _toggleWidget(); // Handle state change action
+          if (widget.context != ItemCardContext.inDisplay) {
+            _toggleWidget();
+          }
         }
         return false;
       },
@@ -262,7 +271,7 @@ class _ItemCardState extends State<ItemCard> {
                 onPressed: _checkItem,
               ),
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Text(
                 itemName,
                 textAlign: TextAlign.center,
@@ -272,7 +281,7 @@ class _ItemCardState extends State<ItemCard> {
                 ),
               ),
             ),
-            const Spacer(),
+            if (widget.context != ItemCardContext.inStorage) const Spacer(),
             Expanded(
               flex: 2,
               child: Text(
@@ -284,7 +293,7 @@ class _ItemCardState extends State<ItemCard> {
                 ),
               ),
             ),
-            const Spacer(),
+            if (widget.context != ItemCardContext.inStorage) const Spacer(),
             if (widget.context != ItemCardContext.inStorage)
               Expanded(
                 flex: 2,
@@ -297,6 +306,20 @@ class _ItemCardState extends State<ItemCard> {
                   ),
                 ),
               ),
+            if (widget.context == ItemCardContext.inDisplay) const Spacer(),
+            if (widget.context == ItemCardContext.inDisplay)
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '= ${_calculateTotal(widget.price, widget.quantity)} \$',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            if (widget.context == ItemCardContext.inDisplay) const Spacer(),
           ],
         ),
       ),

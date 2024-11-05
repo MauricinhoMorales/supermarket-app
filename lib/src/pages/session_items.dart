@@ -56,6 +56,19 @@ class SessionItemsPageState extends State<SessionItemsPage> {
     });
   }
 
+  double _calculateTotal() {
+    double total = 0.0;
+    for (final item in allItems) {
+      // Check if the item is checked
+      if (item['checked'] == 1) {
+        final quantity = double.tryParse(item['quantity'] ?? '') ?? 0;
+        final price = double.tryParse(item['current_price'] ?? '') ?? 0;
+        total += quantity * price;
+      }
+    }
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +107,13 @@ class SessionItemsPageState extends State<SessionItemsPage> {
                 onCheckItem: () {},
               );
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            'Total: \$${_calculateTotal().toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
           ),
         ),
       ]),
